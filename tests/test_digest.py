@@ -8,6 +8,11 @@ def test():
     manifest_path = os.path.join(this_dir, "./manifest.json")
     expected_manifest_path = os.path.join(this_dir, "./expected-manifest.json")
     manifest = open(manifest_path, "r")
-    expected_manifest = open(expected_manifest_path, "r")
+    expected_manifest = open(expected_manifest_path, "r").read()
     result = prepare_file_decode(manifest)
-    assert result == expected_manifest.read()
+    for idx, v in enumerate(expected_manifest):
+        if not v == result[idx]:
+            print repr(expected_manifest[idx-15:idx+45])
+            print repr(result[idx-15:idx+45])
+            break
+    assert result == expected_manifest

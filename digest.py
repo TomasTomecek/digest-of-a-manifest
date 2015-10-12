@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 
 """
 This script takes at least one argument: path to a file with manifest.
@@ -53,12 +53,18 @@ def prepare_file_decode(fd):
     prepare manifest for generating digest
     fd: file object returned by open
     """
-    decoded_json = json.load(fd, object_pairs_hook=OrderedDict)
+    j = fd.read()
+    decoded_json = json.loads(j, object_pairs_hook=OrderedDict, encoding="utf-8")
     del decoded_json["signatures"]
     for h in decoded_json["history"]:
-        print json.loads(h["v1Compatibility"], object_pairs_hook=OrderedDict)
-    encoded_json = json.dumps(decoded_json, indent=3, separators=(',', ': '), ensure_ascii=False)
-    return encoded_json
+        print json.loads(h["v1Compatibility"], object_pairs_hook=OrderedDict, encoding="utf-8")
+
+    # TODO: get rid of all \uXXXX here and make everything utf-8
+
+    encoded_json = json.dumps(decoded_json, indent=3, separators=(',', ': '), ensure_ascii=True)
+
+    # TODO: save it as utf-8, but before that substitue all < > &
+    return unicode(encoded_json).encode("utf-8")
 
 
 def compute_digest(manifest):
