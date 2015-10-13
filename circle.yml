@@ -3,6 +3,6 @@ machine:
 
 test:
   pre:
-    - "py.test ./tests/":
+    - "py.test -vv ./tests/":
        environment:
          PYTHONPATH: $PWD

@@ -1,5 +1,7 @@
 # `f(manifest) → digest`
 
+[![Circle CI](https://circleci.com/gh/TomasTomecek/digest-of-a-manifest.svg?style=svg)](https://circleci.com/gh/TomasTomecek/digest-of-a-manifest)
+
 This is a simple python script which is able to calculate digest from provided manifest.
 
 Use it like this:
