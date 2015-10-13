@@ -1,8 +1,8 @@
 machine:
   python:
-  environment:
-    CI: true
 
 test:
   pre:
-    - py.test
+    - py.test ./tests/:
+      environment:
+        PYTHONPATH: $PWD
