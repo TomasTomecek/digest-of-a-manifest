@@ -1,7 +1,11 @@
-Test with:
+Test with (from root of the project):
 
 ```
-$ PYTHONPATH="$PWD" py.test-2.7 -vv
+$ PYTHONPATH="$PWD" py.test
 ```
 
-Current issue is that docker encodes everything as utf-8, except for `<`, `>` and `&`; while python wants unicode.
+Some background:
+
+ * https://github.com/docker/distribution/issues/1066
+ * https://github.com/docker/distribution/issues/1065
+ * http://blog.tomecek.net/post/get-digest-of-a-manifest/
