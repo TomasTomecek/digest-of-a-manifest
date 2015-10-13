@@ -1,5 +1,7 @@
 machine:
   python:
+  environment:
+    CI: true
 
 dependencies:
   pre:
