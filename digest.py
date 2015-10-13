@@ -14,7 +14,7 @@ import hashlib
 from collections import OrderedDict
 
 
-def prepare_file_hack(fd):
+def prepare_file_hack(manifest):
     """
     This is a hacky implementation which removes 'signatures' using regular expressions,
     for more info see:
@@ -32,7 +32,7 @@ def prepare_file_hack(fd):
 
     ls = []
 
-    for line in fd.readlines():
+    for line in manifest.split("\n"):
         if line == stop:
             states = 2
         if states == 1:
@@ -41,33 +41,33 @@ def prepare_file_hack(fd):
         if m is not None:
             states = 1
             ls = ls[:-1]
-            stop = m.groups()[0] + "]\n"
+            stop = m.groups()[0] + "]"
             continue
         else:
             ls.append(line)
-    return "".join(ls)
+    return "\n".join(ls)
 
 
-def prepare_file_decode(fd):
+def prepare_file_decode(manifest):
     """
     Remove 'signatures' by deserializing json
 
     fd: file object returned by open
     """
-    j = fd.read()
-    decoded_json = json.loads(j, object_pairs_hook=OrderedDict, encoding="utf-8")
+    decoded_json = json.loads(manifest, object_pairs_hook=OrderedDict, encoding="utf-8")
     del decoded_json["signatures"]
-    for h in decoded_json["history"]:
-        # print json.loads(h["v1Compatibility"], object_pairs_hook=OrderedDict, encoding="utf-8")
-        i = h["v1Compatibility"]
-        i = i.replace(r"\u003c", "<").replace(r"\u003e", ">").replace(r"\u0026", "&")
-        h["v1Compatibility"] = i
-        # print i
+    # for h in decoded_json["history"]:
+    #     # print json.loads(h["v1Compatibility"], object_pairs_hook=OrderedDict, encoding="utf-8")
+    #     i = h["v1Compatibility"]
+    #     i = i.replace(r"\u003c", "<").replace(r"\u003e", ">").replace(r"\u0026", "&")
+    #     h["v1Compatibility"] = i
+    #     # print i
 
     encoded_json = json.dumps(decoded_json, indent=3, separators=(',', ': '), ensure_ascii=False)
 
-    encoded_json = encoded_json.replace("<", r"\\u003c").replace(">", r"\\u003e").replace("&", r"\\u0026")
+    # encoded_json = encoded_json.replace("<", r"\\u003c").replace(">", r"\\u003e").replace("&", r"\\u0026")
 
+    return encoded_json.encode("utf-8")
     return unicode(encoded_json).encode("utf-8")
 
 
@@ -90,7 +90,8 @@ def main():
     for fp in sys.argv[1:]:
         p = os.path.abspath(os.path.expanduser(fp))
         with open(p, "r") as fd:
-            content = prepare_file_decode(fd)
+            raw_manifest = fd.read()
+            content = prepare_file_decode(raw_manifest)
             digest = compute_digest(content)
             result.append((fp, digest))
     if len(result) == 1:
