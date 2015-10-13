@@ -68,7 +68,6 @@ def prepare_file_decode(manifest):
     # encoded_json = encoded_json.replace("<", r"\\u003c").replace(">", r"\\u003e").replace("&", r"\\u0026")
 
     return encoded_json.encode("utf-8")
-    return unicode(encoded_json).encode("utf-8")
 
 
 def compute_digest(manifest):
