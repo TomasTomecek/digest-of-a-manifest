@@ -3,10 +3,6 @@ machine:
   environment:
     CI: true
 
-dependencies:
-  pre:
-    - pip install pytest
-
 test:
   pre:
     - py.test
