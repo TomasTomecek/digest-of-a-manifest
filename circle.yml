@@ -4,5 +4,5 @@ machine:
 test:
   pre:
     - "py.test ./tests/":
-      environment:
-        PYTHONPATH: $PWD
+       environment:
+         PYTHONPATH: $PWD
