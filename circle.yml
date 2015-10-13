@@ -1,0 +1,10 @@
+machine:
+  python:
+
+dependencies:
+  pre:
+    - pip install pytest
+
+test:
+  pre:
+    - py.test
