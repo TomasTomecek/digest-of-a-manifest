@@ -57,13 +57,18 @@ def prepare_file_decode(fd):
     decoded_json = json.loads(j, object_pairs_hook=OrderedDict, encoding="utf-8")
     del decoded_json["signatures"]
     for h in decoded_json["history"]:
-        print json.loads(h["v1Compatibility"], object_pairs_hook=OrderedDict, encoding="utf-8")
+        # print json.loads(h["v1Compatibility"], object_pairs_hook=OrderedDict, encoding="utf-8")
+        i = h["v1Compatibility"]
+        i = i.replace(r"\u003c", "<").replace(r"\u003e", ">").replace(r"\u0026", "&")
+        h["v1Compatibility"] = i
+        print i
 
-    # TODO: get rid of all \uXXXX here and make everything utf-8
-
-    encoded_json = json.dumps(decoded_json, indent=3, separators=(',', ': '), ensure_ascii=True)
+    encoded_json = json.dumps(decoded_json, indent=3, separators=(',', ': '), ensure_ascii=False)
 
     # TODO: save it as utf-8, but before that substitue all < > &
+
+    encoded_json = encoded_json.replace("<", r"\\u003c").replace(">", r"\\u003e").replace("&", r"\\u0026")
+
     return unicode(encoded_json).encode("utf-8")
 
 
