@@ -4,6 +4,7 @@
 This script takes at least one argument: path to a file with manifest.
 It then computes and prints digest of the manifest(s).
 """
+from copy import deepcopy
 
 import os
 import re
@@ -14,6 +15,78 @@ import hashlib
 from collections import OrderedDict
 
 
+class Manifest(object):
+    def __init__(self, manifest):
+        """
+        :param manifest: str, json-encoded manifest
+        """
+        self._encoded_manifest = manifest
+        self._decoded_manifest = None
+
+    def prepare_for_digest_computation(self):
+        """
+        strip "signatures" from decoded manifest
+
+        :return: decoded manifest (instance of OrderedDict)
+        """
+        decoded_manifest = deepcopy(self.decoded_manifest)
+        del decoded_manifest["signatures"]
+        return decoded_manifest
+
+    @property
+    def digest(self):
+        """
+        E.g.
+
+        sha256:3bd99e8c083e6bb60ef9c1e7de1a2c34a1fab103b6ee4e9c23f08abd91fb6d53
+        """
+        decoded_manifest = self.prepare_for_digest_computation()
+        return "sha256:" + hashlib.sha256(self.render(decoded_manifest)).hexdigest()
+
+    @property
+    def decoded_manifest(self):
+        if self._decoded_manifest is None:
+            self._decoded_manifest = json.loads(
+                self._encoded_manifest, object_pairs_hook=OrderedDict, encoding="utf-8")
+            # # This is left here just to keep track of past progress
+            # for h in decoded_json["history"]:
+            #     # print json.loads(h["v1Compatibility"], object_pairs_hook=OrderedDict,
+            #                        encoding="utf-8")
+            #     i = h["v1Compatibility"]
+            #     i = i.replace(r"\u003c", "<").replace(r"\u003e", ">").replace(r"\u0026", "&")
+            #     h["v1Compatibility"] = i
+            #     # print i
+        return self._decoded_manifest
+
+    def set_tag(self, tag):
+        """
+        :param tag: str
+        :return: None
+        """
+        self.decoded_manifest["tag"] = tag
+
+    def set_name(self, name):
+        """
+        :param name: str
+        :return: None
+        """
+        self.decoded_manifest["name"] = name
+
+    def render(self, decoded_manifest=None):
+        """
+        serialize decoded manifest to json
+
+        :returns: str
+        """
+        decoded_manifest = decoded_manifest or self.decoded_manifest
+        encoded_manifest = json.dumps(
+            decoded_manifest, indent=3, separators=(',', ': '), ensure_ascii=False)
+        # # This is left here just to keep track of past progress
+        # encoded_json = encoded_json.replace("<", r"\\u003c").replace(">", r"\\u003e"
+        #     ).replace("&", r"\\u0026")
+        return encoded_manifest.encode("utf-8")
+
+
 def prepare_file_hack(manifest):
     """
     This is a hacky implementation which removes 'signatures' using regular expressions,
@@ -21,7 +94,7 @@ def prepare_file_hack(manifest):
 
         https://github.com/docker/distribution/issues/1065
 
-    fd: file object returned by open
+    :param manifest: str, json-encoded manifest
     """
     # 0 start -> signatures
     # 1 signatures
@@ -48,39 +121,6 @@ def prepare_file_hack(manifest):
     return "\n".join(ls)
 
 
-def prepare_file_decode(manifest):
-    """
-    Remove 'signatures' by deserializing json
-
-    fd: file object returned by open
-    """
-    decoded_json = json.loads(manifest, object_pairs_hook=OrderedDict, encoding="utf-8")
-    del decoded_json["signatures"]
-    # for h in decoded_json["history"]:
-    #     # print json.loads(h["v1Compatibility"], object_pairs_hook=OrderedDict, encoding="utf-8")
-    #     i = h["v1Compatibility"]
-    #     i = i.replace(r"\u003c", "<").replace(r"\u003e", ">").replace(r"\u0026", "&")
-    #     h["v1Compatibility"] = i
-    #     # print i
-
-    encoded_json = json.dumps(decoded_json, indent=3, separators=(',', ': '), ensure_ascii=False)
-
-    # encoded_json = encoded_json.replace("<", r"\\u003c").replace(">", r"\\u003e").replace("&", r"\\u0026")
-
-    return encoded_json.encode("utf-8")
-
-
-def compute_digest(manifest):
-    """
-    E.g.
-
-    sha256:3bd99e8c083e6bb60ef9c1e7de1a2c34a1fab103b6ee4e9c23f08abd91fb6d53
-
-    manifest: str
-    """
-    return "sha256:" + hashlib.sha256(manifest).hexdigest()
-
-
 def main():
     if len(sys.argv[1:]) <= 0:
         print "Provide please at least one path to a file with manifest."
@@ -90,8 +130,8 @@ def main():
         p = os.path.abspath(os.path.expanduser(fp))
         with open(p, "r") as fd:
             raw_manifest = fd.read()
-            content = prepare_file_decode(raw_manifest)
-            digest = compute_digest(content)
+            m = Manifest(raw_manifest)
+            digest = m.digest
             result.append((fp, digest))
     if len(result) == 1:
         print result[0][1]
